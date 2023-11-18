@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-time Messaging</title>
+</head>
+<body>
+    <div id="app">
+        <ul>
+            <li v-for="message in messages" :key="message.id">{{ message.text }}</li>
+        </ul>
+        <input v-model="newMessage" @keyup.enter="sendMessage" placeholder="Type a message...">
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script>
+        var socket = io.connect('http://localhost:5000');
+
+        new Vue({
+            el: '#app',
+            data: {
+                messages: [],
+                newMessage: ''
+            },
+            mounted() {
+                socket.on('message', (data) => {
+                    this.messages.push(data);
+                });
+
+                socket.emit('get_messages');
+                socket.on('all_messages', (data) => {
+                    this.messages = data;
+                });
+            },
+            methods: {
+                sendMessage() {
+                    if (this.newMessage.trim() !== '') {
+                        socket.emit('message', { text: this.newMessage });
+                        this.newMessage = '';
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
